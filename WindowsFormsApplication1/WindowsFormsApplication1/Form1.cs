@@ -27,8 +27,6 @@ namespace WindowsFormsApplication1
             {
                 listBox1.Items.Add(oPair.Key);
             }
-
-
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -37,26 +35,34 @@ namespace WindowsFormsApplication1
             AAMTGSet oSelectedSet = (AAMTGSet)oMtgLib.m_oMtgSets[sSelectedSet];
             listView1.Items.Clear();
             foreach (AAMTGCard oCard in oSelectedSet.cards)
-                listView1.Items.Add(string.Format("http://magiccards.info/scans/en/{0}/{1}.jpg", oSelectedSet.magicCardsInfoCode, oCard.number));
+                listView1.Items.Add(oCard.name);
         }
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            AAMTGCard oSelectedCard = null;
             try
             {
                 string sSelectedCard;
                 if (listView1.SelectedItems.Count > 0)
                 {
                     sSelectedCard = listView1.SelectedItems[0].Text;
-                    Clipboard.SetDataObject(listView1.SelectedItems[0].Text);
-                    pictureBox1.ImageLocation = listView1.SelectedItems[0].Text;
+                    oSelectedCard = oMtgLib.GetCard(listBox1.SelectedItem.ToString(), sSelectedCard);
+                    this.Text = oSelectedCard.sImageString;
+                    //Clipboard.SetDataObject(listView1.SelectedItems[0].Text);
+                    //pictureBox1.ImageLocation = listView1.SelectedItems[0].Text;
                     //pictureBox1.Load(listView1.SelectedItems[0].Text);
-
+                    oSelectedCard.FetchImage();
+                    if (oSelectedCard.oImage != null)
+                        pictureBox1.Image = oSelectedCard.oImage;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                if (oSelectedCard != null)
+                    MessageBox.Show(string.Format("Error:{0} card:{1} number:{2} ", ex.Message, oSelectedCard.name, oSelectedCard.number));
+                else
+                    MessageBox.Show(ex.Message);
             }
         }
     }
