@@ -81,7 +81,7 @@ namespace WindowsFormsApplication1
                 if ((oCard.number == null && oCard.mcinumber == null) || iCardNumber > 0)
                 {// if empty numbers or if we already started numbering them
                     iCardNumber++;
-                    oCard.number = iCardNumber.ToString(); 
+                    oCard.number = iCardNumber.ToString(); // toto
                 }
             }
             return cards.Count;
