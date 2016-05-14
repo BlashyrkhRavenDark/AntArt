@@ -22,7 +22,7 @@ namespace WindowsFormsApplication1
 
         private void button1_Click(object sender, EventArgs e)
         {
-            oMtgLib = new AAMTGLibrary(@"C:\Users\antoi\Source\Repos\AntArt\WindowsFormsApplication1\WindowsFormsApplication1\Resources\AllSets.json");
+            oMtgLib = new AAMTGLibrary(@"..\..\Resources\AllSets.json");
             foreach (DictionaryEntry oPair in oMtgLib.m_oMtgSets)
             {
                 listBox1.Items.Add(oPair.Key);
@@ -65,5 +65,6 @@ namespace WindowsFormsApplication1
                     MessageBox.Show(ex.Message);
             }
         }
+
     }
 }

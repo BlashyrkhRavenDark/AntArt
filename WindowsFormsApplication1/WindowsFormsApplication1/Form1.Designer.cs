@@ -61,9 +61,9 @@
             // 
             this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.pictureBox1.BackgroundImage = global::WindowsFormsApplication1.Properties.Resources.berserk;
-            this.pictureBox1.Location = new System.Drawing.Point(12, 477);
+            this.pictureBox1.Location = new System.Drawing.Point(12, 468);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(213, 300);
+            this.pictureBox1.Size = new System.Drawing.Size(213, 303);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 2;
             this.pictureBox1.TabStop = false;
