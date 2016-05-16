@@ -68,9 +68,10 @@ namespace WindowsFormsApplication1
         public List<AAMTGCard> cards { get; set; }              // ANT : The card list filled automatically by the JSON parser
         #endregion
 
-        private ArrayList m_OrderedCards;                       // ANT : Our version of cards ordered if they match a specific set ("ie" for ice age, etc... )
+        #region Our own Set values
+        private ArrayList m_OrderedCards = null;                       // ANT : Our version of cards ordered if they match a specific set ("ie" for ice age, etc... )
         public ArrayList OrderedCards { get { return (m_OrderedCards == null ? ReorderSet() : m_OrderedCards); } }
-
+        #endregion
 
         public AAMTGSet()
         {
@@ -124,7 +125,6 @@ namespace WindowsFormsApplication1
                     oListLands.Add(oCard);
                 if (oCard.iColorNbr > 1)
                     oListMulti.Add(oCard);
-
             }
 
             int iCardNumber = 1;
@@ -138,10 +138,14 @@ namespace WindowsFormsApplication1
             m_OrderedCards.AddRange(oListMulti);
             foreach (AAMTGCard oCardWithoutNumber in m_OrderedCards)
                 oCardWithoutNumber.number = iCardNumber++.ToString();
-
             return m_OrderedCards;
         }
 
+        /// <summary>
+        /// Returns the card with the given name
+        /// </summary>
+        /// <param name="p_sCardName">Card name</param>
+        /// <returns>The wanted class</returns>
         public AAMTGCard GetCard(string p_sCardName)
         {
             foreach (AAMTGCard oCard in cards)
