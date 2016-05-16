@@ -34,8 +34,16 @@ namespace WindowsFormsApplication1
             string sSelectedSet = listBox1.SelectedItem.ToString();
             AAMTGSet oSelectedSet = (AAMTGSet)oMtgLib.m_oMtgSets[sSelectedSet];
             listView1.Items.Clear();
-            foreach (AAMTGCard oCard in oSelectedSet.cards)
-                listView1.Items.Add(oCard.name);
+            if (oSelectedSet.magicCardsInfoCode == "ia")
+            {
+                foreach (AAMTGCard oCard in oSelectedSet.OrderedCards)
+                    listView1.Items.Add(oCard.name);
+            }
+            else
+            {
+                foreach (AAMTGCard oCard in oSelectedSet.cards)
+                    listView1.Items.Add(oCard.name);
+            }
         }
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
@@ -48,7 +56,7 @@ namespace WindowsFormsApplication1
                 {
                     sSelectedCard = listView1.SelectedItems[0].Text;
                     oSelectedCard = oMtgLib.GetCard(listBox1.SelectedItem.ToString(), sSelectedCard);
-                    this.Text = oSelectedCard.sImageString;
+                    this.Text = oSelectedCard.GetCardInfos();
                     //Clipboard.SetDataObject(listView1.SelectedItems[0].Text);
                     //pictureBox1.ImageLocation = listView1.SelectedItems[0].Text;
                     //pictureBox1.Load(listView1.SelectedItems[0].Text);

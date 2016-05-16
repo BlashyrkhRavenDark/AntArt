@@ -36,10 +36,10 @@ namespace WindowsFormsApplication1
         public AAMTGSet GetSet(string p_sSetName)
         {
             if (m_oMtgSets.ContainsKey(p_sSetName))
-                return (AAMTGSet) m_oMtgSets[p_sSetName];
+                return (AAMTGSet)m_oMtgSets[p_sSetName];
             return null;
         }
-        
+
         public AAMTGCard GetCard(string p_sSetName, string p_sCardName)
         {
             AAMTGSet oSet = GetSet(p_sSetName);
@@ -51,7 +51,7 @@ namespace WindowsFormsApplication1
 
     class AAMTGSet
     {
-
+        #region JASON PARAMETERS
         public string name { get; set; }                        // The name of the set
         public string code { get; set; }                        // The set's abbreviated code
         public string gathererCode { get; set; }                // The code that Gatherer uses for the set. Only present if different than 'code'
@@ -65,26 +65,81 @@ namespace WindowsFormsApplication1
                                                                 //                      "promo", "vanguard", "masters"
         public string block { get; set; }                       // "Masques",            // The block this set is in,
         public string onlineOnly { get; set; }                  // : false,                // Present and set to true if the set was only released online
-        public List<AAMTGCard> cards { get; set; }
+        public List<AAMTGCard> cards { get; set; }              // ANT : The card list filled automatically by the JSON parser
+        #endregion
+
+        private ArrayList m_OrderedCards;                       // ANT : Our version of cards ordered if they match a specific set ("ie" for ice age, etc... )
+        public ArrayList OrderedCards { get { return (m_OrderedCards == null ? ReorderSet() : m_OrderedCards); } }
+
 
         public AAMTGSet()
         {
-           
+
         }
 
         public int AddParentSetToCards()
         {
-            int iCardNumber = 0;
             foreach (AAMTGCard oCard in cards)
             {
+                // Adding parent set reference to card
                 oCard.oParentSet = this;
-                if ((oCard.number == null && oCard.mcinumber == null) || iCardNumber > 0)
-                {// if empty numbers or if we already started numbering them
-                    iCardNumber++;
-                    oCard.number = iCardNumber.ToString(); // toto
-                }
             }
             return cards.Count;
+        }
+
+
+        /// <summary>
+        /// Reorders the set according to the magiccards.info rule (Black cards then blue cards etc...)
+        /// Is launched the first time the public member OrderedCards is accessed, any ulterior call to OrderedCards will return m_OrderedCards
+        /// </summary>
+        /// <returns> Returns m_OrderedCards after filling it</returns>
+        public ArrayList ReorderSet()
+        {
+            ArrayList oListBlack = new ArrayList();
+            ArrayList oListBlue = new ArrayList();
+            ArrayList oListGreen = new ArrayList();
+            ArrayList oListRed = new ArrayList();
+            ArrayList oListWhite = new ArrayList();
+            ArrayList oListArtefact = new ArrayList();
+            ArrayList oListLands = new ArrayList();
+            ArrayList oListMulti = new ArrayList();
+            m_OrderedCards = new ArrayList();
+
+            foreach (AAMTGCard oCard in cards)
+            {
+
+                if (oCard.bIsBlack && oCard.iColorNbr == 1)
+                    oListBlack.Add(oCard);
+                if (oCard.bIsBlue && oCard.iColorNbr == 1)
+                    oListBlue.Add(oCard);
+                if (oCard.bIsGreen && oCard.iColorNbr == 1)
+                    oListGreen.Add(oCard);
+                if (oCard.bIsRed && oCard.iColorNbr == 1)
+                    oListRed.Add(oCard);
+                if (oCard.bIsWhite && oCard.iColorNbr == 1)
+                    oListWhite.Add(oCard);
+                if (oCard.bIsArtefact)
+                    oListArtefact.Add(oCard);
+                if (oCard.bIsLand)
+                    oListLands.Add(oCard);
+                if (oCard.iColorNbr > 1)
+                    oListMulti.Add(oCard);
+
+            }
+
+            int iCardNumber = 1;
+            m_OrderedCards.AddRange(oListBlack);
+            m_OrderedCards.AddRange(oListBlue);
+            m_OrderedCards.AddRange(oListGreen);
+            m_OrderedCards.AddRange(oListRed);
+            m_OrderedCards.AddRange(oListWhite);
+            m_OrderedCards.AddRange(oListArtefact);
+            m_OrderedCards.AddRange(oListLands);
+            m_OrderedCards.AddRange(oListMulti);
+            foreach (AAMTGCard oCardWithoutNumber in m_OrderedCards)
+                oCardWithoutNumber.number = iCardNumber++.ToString();
+
+            return m_OrderedCards;
         }
 
         public AAMTGCard GetCard(string p_sCardName)
@@ -101,6 +156,8 @@ namespace WindowsFormsApplication1
 
     class AAMTGCard
     {
+
+        #region JASON INFO
         public string id { get; set; }                  //	3129aee7f26a4282ce131db7d417b1bc3338c4d4 A unique id for this card.It is made up by doing an SHA1 hash of setCode + cardName + cardImageName
         public string layout { get; set; }              //	"normal"	The card layout.Possible values: normal, split, flip, double-faced, token, plane, scheme, phenomenon, leveler, vanguard
         public string name { get; set; }                //"Research"	The card name.For split, double-faced and flip cards, just the name of one side of the card.Basically each 'sub-card' has its own record.
@@ -134,21 +191,108 @@ namespace WindowsFormsApplication1
         public bool reserved { get; set; }              //true	Set to true if this card is reserved by Wizards Official Reprint Policy
         public string releaseDate { get; set; }         //"2010-07-22" or "2010-07" or "2010"	The date this card was released.This is only set for promo cards. The date may not be accurate to an exact day and month, thus only a partial date may be set(YYYY-MM-DD or YYYY-MM or YYYY). Some promo cards do not have a known release date.
         public bool starter { get; set; }               //true	Set to true if this card was only released as part of a core box set. These are technically part of the core sets and are tournament legal despite not being available in boosters.
+        #endregion
 
+        #region Our own class values
         // Our own values, magiccards.info url construction
-        public string sImageString { get { return string.Format("http://magiccards.info/scans/en/{0}/{1}.jpg", oParentSet.magicCardsInfoCode, this.number == null ? this.mcinumber : this.number); }  }
+        public string sImageString { get { return GetImageString(); } }
         public Image oImage;
         public AAMTGSet oParentSet;
+        public bool bIsBlue { get { return (this.IsColor("Blue")); } }
+        public bool bIsBlack { get { return (this.IsColor("Black")); } }
+        public bool bIsRed { get { return (this.IsColor("Red")); } }
+        public bool bIsWhite { get { return (this.IsColor("White")); } }
+        public bool bIsGreen { get { return (this.IsColor("Green")); } }
+        private int m_iColorNbr = -1;
+        public int iColorNbr { get { return (m_iColorNbr == -1 ? CountCardColors() : m_iColorNbr); } }
+        public bool bIsInstant { get { return (this.IsType("Instant")); } }
+        public bool bIsSorcery { get { return (this.IsType("Sorcery")); } }
+        public bool bIsArtefact { get { return (this.IsType("Artifact")); } }
+        public bool bIsCreature { get { return (this.IsType("Creature")); } }
+        public bool bIsEnchantment { get { return (this.IsType("Enchantment")); } }
+        public bool bIsLand { get { return (this.IsType("Land")); } }
+        public bool bIsPlaneswalker { get { return (this.IsType("Planeswalker")); } }
+        #endregion
 
         public AAMTGCard()
         {
 
         }
 
+
+        /// <summary>
+        /// Builds a string with cards information and returns it
+        /// </summary>
+        /// <returns>A string with various card info</returns>
+        public string GetCardInfos()
+        {
+            return string.Format("Name:{0} MCICode:{1} number:{2} numberOfColors:{3}", this.name, this.oParentSet.magicCardsInfoCode, this.number, this.iColorNbr);
+        }
+
+        #region Various properties getters (Color, Type, ColorCount)
+
+        /// <summary>
+        /// Is this this card of the given Color?
+        /// </summary>
+        /// <param name="p_sColor">"Black" or "Red" for example</param>
+        /// <returns>true or false</returns>
+        private bool IsColor(string p_sColor)
+        {
+            if (this.colors != null && this.colors.Contains(p_sColor))
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Is this this card of the given type?
+        /// </summary>
+        /// <param name="p_sType">"Artefact" or "Land" for example</param>
+        /// <returns>true or false</returns>
+        private bool IsType(string p_sType)
+        {
+            if (this.types != null && this.types.Contains(p_sType))
+                return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Returns how many color a card has
+        /// </summary>
+        /// <returns>An integer from 0 to 5 (so far)</returns>
+        private int CountCardColors()
+        {
+            int iColors = 0;
+            if (this.bIsBlack)
+                iColors++;
+            if (this.bIsBlue)
+                iColors++;
+            if (this.bIsGreen)
+                iColors++;
+            if (this.bIsWhite)
+                iColors++;
+            if (this.bIsRed)
+                iColors++;
+            m_iColorNbr = iColors;
+            return iColors;
+        }
+        #endregion
+
+        #region Image url generation and image download
+
+        public string GetImageString()
+        {
+            if (oParentSet.magicCardsInfoCode == "5e")
+                return string.Format("http://magiccards.info/scans/en/5e/{0}.jpg", this.mcinumber.Remove(0, 6));
+            else if (oParentSet.magicCardsInfoCode == "4e")
+                return string.Format("http://magiccards.info/scans/en/4e/{0}.jpg", this.mcinumber.Remove(0, 6));
+            else
+                return string.Format("http://magiccards.info/scans/en/{0}/{1}.jpg", oParentSet.magicCardsInfoCode == null ? oParentSet.code.ToLower() : oParentSet.magicCardsInfoCode, this.number == null ? this.mcinumber : this.number);
+        }
+
         public int FetchImage()
         {
             if (this.oImage == null)
-                {
+            {
                 // Create web client.
                 WebClient oClient = new WebClient();
 
@@ -167,5 +311,6 @@ namespace WindowsFormsApplication1
             }
             return 1;
         }
+        #endregion
     }
 }
