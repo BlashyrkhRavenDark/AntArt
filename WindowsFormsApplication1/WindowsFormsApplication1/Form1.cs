@@ -60,9 +60,10 @@ namespace WindowsFormsApplication1
                     //Clipboard.SetDataObject(listView1.SelectedItems[0].Text);
                     //pictureBox1.ImageLocation = listView1.SelectedItems[0].Text;
                     //pictureBox1.Load(listView1.SelectedItems[0].Text);
-                    oSelectedCard.FetchImage();
-                    if (oSelectedCard.oImage != null)
-                        pictureBox1.Image = oSelectedCard.oImage;
+                    //oSelectedCard.FetchImage();
+                    //if (oSelectedCard.oImage != null)
+                    //    pictureBox1.Image = oSelectedCard.oImage;
+                    pictureBox1.Image = oSelectedCard.oImage2;
                 }
             }
             catch (Exception ex)

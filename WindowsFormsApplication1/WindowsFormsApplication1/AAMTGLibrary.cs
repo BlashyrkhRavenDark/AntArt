@@ -201,6 +201,8 @@ namespace WindowsFormsApplication1
         // Our own values, magiccards.info url construction
         public string sImageString { get { return GetImageString(); } }
         public Image oImage;
+        private Image m_oImage2 = null;
+        public Image oImage2 { get { return (m_oImage2 == null ? GetImage() : m_oImage2); } }
         public AAMTGSet oParentSet;
         public bool bIsBlue { get { return (this.IsColor("Blue")); } }
         public bool bIsBlack { get { return (this.IsColor("Black")); } }
@@ -316,5 +318,12 @@ namespace WindowsFormsApplication1
             return 1;
         }
         #endregion
+
+        public Image GetImage()
+        {
+            this.FetchImage();
+            m_oImage2 = this.oImage;
+            return m_oImage2;
+        }
     }
 }
