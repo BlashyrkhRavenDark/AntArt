@@ -63,7 +63,7 @@ namespace WindowsFormsApplication1
                     //oSelectedCard.FetchImage();
                     //if (oSelectedCard.oImage != null)
                     //    pictureBox1.Image = oSelectedCard.oImage;
-                    pictureBox1.Image = oSelectedCard.oImage2;
+                    pictureBox1.Image = oSelectedCard.oImage;
                 }
             }
             catch (Exception ex)
