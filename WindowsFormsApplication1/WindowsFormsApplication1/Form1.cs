@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections;
+
 
 namespace WindowsFormsApplication1
 {
@@ -22,7 +24,7 @@ namespace WindowsFormsApplication1
 
         private void button1_Click(object sender, EventArgs e)
         {
-            oMtgLib = new AAMTGLibrary(@"..\..\Resources\AllSets.json");
+            oMtgLib = new AAMTGLibrary(ConfigurationManager.AppSettings["JsonFilePath"], ConfigurationManager.AppSettings["BigPicsDir"]); 
             foreach (DictionaryEntry oPair in oMtgLib.m_oMtgSets)
             {
                 listBox1.Items.Add(oPair.Key);
@@ -64,6 +66,7 @@ namespace WindowsFormsApplication1
                     //if (oSelectedCard.oImage != null)
                     //    pictureBox1.Image = oSelectedCard.oImage;
                     pictureBox1.Image = oSelectedCard.oImage;
+                    pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
                 }
             }
             catch (Exception ex)

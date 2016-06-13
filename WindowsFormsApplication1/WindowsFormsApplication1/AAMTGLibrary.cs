@@ -9,15 +9,18 @@ using Newtonsoft.Json;
 using System.IO;
 using Newtonsoft.Json.Linq;
 using System.Net;
+using System.Configuration;
 
 namespace WindowsFormsApplication1
 {
     class AAMTGLibrary
     {
         public Hashtable m_oMtgSets;
+        public string sBigPicsDir;
 
-        public AAMTGLibrary(string p_sLibFile)
+        public AAMTGLibrary(string p_sLibFile, string p_sBigPicsDir)
         {
+            sBigPicsDir = p_sBigPicsDir;
             m_oMtgSets = new Hashtable();
             JObject aMtgSets = JObject.Parse(File.ReadAllText(p_sLibFile));
 
@@ -199,7 +202,8 @@ namespace WindowsFormsApplication1
 
         #region Our own class values
         // Our own values, magiccards.info url construction
-        public string sImageString { get { return GetImageString(); } }
+        public string sUrlImageString { get { return GetUrlImageString(); } }
+        public string sLocalImageString { get { return GetLocalImageString(); } }
         public Image oImage { get { return (m_oImage == null ? GetImage() : m_oImage); } }
         private Image m_oImage = null;
          public AAMTGSet oParentSet;
@@ -284,7 +288,7 @@ namespace WindowsFormsApplication1
 
         #region Image url generation and image download
 
-        public string GetImageString()
+        public string GetUrlImageString()
         {
             if (oParentSet.magicCardsInfoCode == "5e")
                 return string.Format("http://magiccards.info/scans/en/5e/{0}.jpg", this.mcinumber.Remove(0, 6));
@@ -292,6 +296,18 @@ namespace WindowsFormsApplication1
                 return string.Format("http://magiccards.info/scans/en/4e/{0}.jpg", this.mcinumber.Remove(0, 6));
             else
                 return string.Format("http://magiccards.info/scans/en/{0}/{1}.jpg", oParentSet.magicCardsInfoCode == null ? oParentSet.code.ToLower() : oParentSet.magicCardsInfoCode, this.number == null ? this.mcinumber : this.number);
+        }
+
+        public string GetLocalImageString()
+        {
+
+            if (oParentSet.magicCardsInfoCode == "5e")
+                return string.Format("{0}/en/5e/{1}.jpg", ConfigurationManager.AppSettings["BigPicsDir"], this.mcinumber.Remove(0, 6));
+            else if (oParentSet.magicCardsInfoCode == "4e")
+                return string.Format("{0}/en/4e/{1}.jpg", ConfigurationManager.AppSettings["BigPicsDir"], this.mcinumber.Remove(0, 6));
+            else
+                return string.Format("{0}/en/{1}/{2}.jpg", ConfigurationManager.AppSettings["BigPicsDir"], oParentSet.magicCardsInfoCode == null ? oParentSet.code.ToLower() : oParentSet.magicCardsInfoCode, this.number == null ? this.mcinumber : this.number);
+
         }
 
         public int FetchImage()
@@ -305,22 +321,41 @@ namespace WindowsFormsApplication1
         {
             if (this.m_oImage == null)
             {
-                // Create web client.
-                WebClient oClient = new WebClient();
 
-                // Set user agent and also accept-encoding headers.
-                oClient.Headers["User-Agent"] = "Googlebot/2.1 (+http://www.googlebot.com/bot.html)";
-                oClient.Headers["Accept-Encoding"] = "gzip";
-
-                // Download data.
-                byte[] aFileBytes = oClient.DownloadData(this.sImageString);
-                string sFileType = oClient.ResponseHeaders[HttpResponseHeader.ContentType];
-
-                if (sFileType == "image/jpeg" || sFileType == "image/gif" || sFileType == "image/png")
+                try
                 {
-                    this.m_oImage = Image.FromStream(new MemoryStream(aFileBytes));
+                    if (File.Exists(this.sLocalImageString))
+                    {
+                        this.m_oImage = Image.FromFile(this.sLocalImageString);
+                        return this.m_oImage;
+                    }
+
+
+                    // Create web client.
+                    WebClient oClient = new WebClient();
+
+                    // Set user agent and also accept-encoding headers.
+                    oClient.Headers["User-Agent"] = "Googlebot/2.1 (+http://www.googlebot.com/bot.html)";
+                    oClient.Headers["Accept-Encoding"] = "gzip";
+
+                    // Download data.
+                    byte[] aFileBytes = oClient.DownloadData(this.sUrlImageString);
+                    string sFileType = oClient.ResponseHeaders[HttpResponseHeader.ContentType];
+
+                    if (sFileType == "image/jpeg" || sFileType == "image/gif" || sFileType == "image/png")
+                    {
+                        this.m_oImage = Image.FromStream(new MemoryStream(aFileBytes));
+                        Directory.CreateDirectory(Path.GetDirectoryName(this.sLocalImageString));
+                        this.m_oImage.Save(Path.GetFullPath(this.sLocalImageString));
+                    }
+
+ 
                 }
-            }
+                catch (Exception e)
+                {
+                    return global::WindowsFormsApplication1.Properties.Resources.CardBack;
+                }
+                }
             return this.m_oImage;
         }
     }
